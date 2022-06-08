@@ -1,4 +1,3 @@
-#!/bin/bash
 echo "Enter Application ID"
 read -r APP_ID
 echo "Enter Remote Repo URL"
