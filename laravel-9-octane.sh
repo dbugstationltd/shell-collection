@@ -1,14 +1,14 @@
 #!/bin/bash
 echo "Enter Application ID"
-read APP_ID
+read -r APP_ID
 echo "Enter Remote Repo URL"
-read REPO_URL
+read -r REPO_URL
 echo "Enter Deployment Branch"
-read REPO_BRANCH
+read -r REPO_BRANCH
 echo "Enter Domain"
-read APP_DOMAIN
+read -r APP_DOMAIN
 APP_PARENT_DIR=/var/www
-APP_POST_DEPLOY_COMMAND=php artisan migrate
+APP_POST_DEPLOY_COMMAND="php artisan migrate"
 
 echo "<-------------------Installing  PHP 8.1, Extensions And Others------------------->"
 sudo apt install software-properties-common && sudo add-apt-repository ppa:ondrej/php -y
