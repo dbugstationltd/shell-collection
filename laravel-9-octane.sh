@@ -71,11 +71,9 @@ sudo mv composer.phar /usr/local/bin/composer
 #sudo pm2 startup
 
 echo "<-------------------Application Setup------------------->"
-echo "Adding current user to www-data group"
-sudo usermod -a -G www-data "$USER"
 echo "Making Directories If Not Exists"
 sudo mkdir -p $APP_PARENT_DIR
-sudo chown -R www-data:www-data $APP_PARENT_DIR
+sudo chown -R "${USER}:www-data" $APP_PARENT_DIR
 sudo chmod -R 775 $APP_PARENT_DIR
 
 echo "Clone And Checkout Git"
@@ -85,10 +83,13 @@ cd $APP_ID
 git checkout $REPO_BRANCH
 git pull origin $REPO_BRANCH
 
-cp .env.$REPO_BRANCH .env
+cp .env."${REPO_BRANCH}" .env
 source .env
 composer install --optimize-autoloader
-npm install
+sudo chown -R "${USER}:www-data" $APP_PARENT_DIR
+sudo chmod -R 775 $APP_PARENT_DIR
+git config --global --add safe.directory $APP_PARENT_DIR/$APP_ID
+#npm install
 
 echo "<-------------------Installing DB------------------->"
 if [ "$DB_CONNECTION" == "mysql" ]; then
@@ -98,16 +99,16 @@ if [ "$DB_CONNECTION" == "mysql" ]; then
   sudo apt-cache policy mysql-server
   sudo apt install mysql-server -y
   apt-cache policy mysql-server
+  sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password by 'Jamal@321!';"
   echo "Mysql Secure Installing"
   sudo mysql_secure_installation
   echo "Enable auto-start"
   sudo systemctl enable mysql
-  source /etc/mysql/debian.cnf
   SQL1="CREATE DATABASE IF NOT EXISTS ${DB_DATABASE};"
-  SQL2="CREATE USER '${DB_USERNAME}'@'%' IDENTIFIED BY '${DB_PASSWORD}';"
+  SQL2="CREATE USER '${DB_USERNAME}'@'%' IDENTIFIED WITH mysql_native_password BY '${DB_PASSWORD}';"
   SQL3="GRANT ALL PRIVILEGES ON ${DB_DATABASE}.* TO '${DB_USERNAME}'@'%';"
   SQL4="FLUSH PRIVILEGES;"
-  mysql -h ${DB_HOST} -u ${user} -p${password} -e "${SQL1}${SQL2}${SQL3}${SQL4}"
+  sudo mysql -u root -p -e "${SQL1}${SQL2}${SQL3}${SQL4}"
 fi
 
 echo "<-------------------Redis Setup------------------->"
@@ -155,17 +156,17 @@ sudo rm /etc/nginx/sites-enabled/default
 sudo bash -c "cat <<EOF >/etc/nginx/sites-available/${APP_DOMAIN}
 server {
     listen 80;
-    server_name ${APP_DOMAIN} www.${APP_DOMAIN};
+    server_name ${APP_DOMAIN};
     root ${APP_PARENT_DIR}/${APP_ID}/public;
     index index.html index.htm index.php;
     error_page 404 /index.php;
     location / {
         proxy_pass    http://127.0.0.1:8089;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Upgrade \\\$http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
+        proxy_set_header Host \\\$host;
+        proxy_cache_bypass \\\$http_upgrade;
     }
 }
 EOF"
