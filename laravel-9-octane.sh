@@ -192,3 +192,9 @@ bash -c "$APP_POST_DEPLOY_COMMAND"
 echo "<----------------------Cleaning----------------------->"
 sudo apt autoremove
 
+
+echo "<----------------------Create a Keygen for ssh----------------------->"
+
+ssh-keygen -t rsa -C "MyEmailAddress" -f ~/.ssh/id_rsa -P ""
+
+
